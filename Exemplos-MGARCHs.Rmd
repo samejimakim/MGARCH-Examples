@@ -1,0 +1,147 @@
+---
+output:
+    html_document:
+        fig_caption: true
+--- 
+---
+title: "Exemplos-MGARCH"
+author: "Kim Samejima Lopes"
+date: "11-12-2014"
+---  
+  
+[//]: #         includes:
+[//]: #             in_header: mystyles.sty  
+[//]: # 
+```{r,echo=F,warning=FALSE,message=FALSE,include=FALSE}
+library(rugarch)
+library(ccgarch)
+library(rmgarch)
+library(gogarch)
+options(xtable.comment = FALSE)
+```
+
+<center><h1> Exemplos para processos GARCH multivariados</h1></center>    
+
+* VEC e BEKK  
+* F-GARCH, O-GARCH e GO-GARCH  
+* ICA-GARCH e GICA-GARCH   
+* CCC-GARCH e DCC-GARCH  
+
+## F-GARCH, O-GARCH e GO-GARCH  
+Pacote `gogarch` e pacote `rmgarch`  
+
+## ICA-GARCH e GICA-GARCH   
+Pacote `rmgarch`
+
+
+
+## CCC-GARCH e DCC-GARCH    
+### CCC-GARCH    
+
+Modelos CCC-GARCH são da forma:  
+
+$$
+\label{eq:cccgarch}
+\textbf{H}_t = \textbf{D}_t \times \textbf{R}  \times \textbf{D}_t \\
+\textbf{D}_t= \left[diag\{h_{ii,t}^{1/2}\}\right],i=1,\dots,n  
+$$
+
+$h_{ii,t}$ é um modelo GARCH univariado qualquer e $\textbf{R}= \left[\rho_{i,j}\right],i,j=1,\dots,n$ e $\rho_{i,i}=1,i=1,\dots,n$ é uma matriz simétrica, positiva definida.   
+Teremos que $\textbf{H}_t$ será positva definida se e só se todas as n variâncias condicionais forem positivas e $\textbf{H_t}\ge 0$.
+Em particular um CCC-GARCH(1,1) seria da forma dada em \ref{eq:cccgarch}, com $h_{ii,t},i=1,\dots,n$ definidos por   
+$$
+h_{ii,t}=w_i+\alpha_i\epsilon^2_{i,t-1}+\beta_i h_{ii,t-1},i=1\dots,n
+$$  
+Ou seja, cada $h_{ii,t}$ é dado por um GARCH(1,1).
+
+### Exemplo Simulado   
+Utilizando o pacote `ccgarch`, simularemos um modelo CCC-GARCH(1,1) bivariado definido por:
+$$
+\textbf{R}=\left(\begin{array}{cc} 1 & -0.3 \\ 0.8 & 1\end{array}\right) \\
+h_{11,t}= 0.05 + 0.5 \epsilon^2_{1,t-1}+ 0.2 h_{11,t-1} \\
+h_{22,t}= 0.02 + 0.7 \epsilon^2_{2,t-1}+ 0.1 h_{22,t-1} 
+$$  
+
+```{r}
+### EXEMPLOS USANDO O PACOTE 'ccgarch'
+
+# 'nobs'  a number of observations to be simulated (T)
+# 'a'     a vector of constants in the GARCH equation (N×1)
+# 'A'     an ARCH parameter matrix in the GARCH equation. A can be a diagonal matrix for the original CCC-GARCH model 
+#         or a full matrix for the extended model (N×N)
+# 'B'     a GARCH parameter matrix in the GARCH equation. B can be a diagonal matrix for the original CCC-GARCH model 
+#         or a full matrix for the extended model (N×N)
+# 'R'     a constant conditional correlation matrix (N×N)
+# 'd.f'   the degrees of freedom parameter for the t-distribution
+# 'model' "diagonal" for the diagonal model and "extended" for the extended model
+
+a1=c(0.05,0.02)
+A1=matrix(c(0.5,0,0,0.7),ncol=2)
+B1=matrix(c(0.2,0,0,0.1),ncol=2)
+R1=matrix(c(1,-0.3,0.8,1),ncol=2)
+H1<-eccc.sim(nobs=1000, a1, A1, B1, R1, d.f=5, model="diagonal")
+
+#'h'      a matrix of the simulated conditional variances (T × N )
+#'eps'    a matrix of the simulated time series with (E)CCC-GARCH process (T × N )
+```
+
+```{r}
+plot.ts(H$eps, main = "Processos simulados")
+```
+
+```{r}
+plot.ts(H$h, main="Volatilidade observada nos processos simulados")
+```
+
+
+Para o processo simulado, vamos estimar os parâmetros utilizando o mesmo pacote, `eccc.estimation`.
+Temos duas séries simuladas, e suporemos então que elas seguem um CCC-GARCH(1,1) e são regidas pelo processo:  
+$$
+\textbf{h}_t=\left(
+\begin{array}{c}
+ h_{11,t} \\ h_{22,t}
+\end{array}
+\right)=\textbf{w}+\textbf{A}\textbf{$\epsilon$}_{t-1}\textbf{$\epsilon$}_{t-1}^T+\textbf{B}\textbf{h}_{t-1}=\\
+=
+\left(\begin{array}{c} w_{1} \\ w_{2} \end{array} \right) + 
+\left(\begin{array}{cc} \alpha_{1} & 0 \\ 0 & \alpha_{2} \end{array} \right) 
+\left(\begin{array}{c} \epsilon^2_{1,t-1} \\ \epsilon^2_{2,t-1} \end{array} \right) + 
+\left(\begin{array}{cc} \beta_{1}  & 0 \\ 0 & \beta_{2} \end{array} \right) 
+\left(\begin{array}{c} h_{11,t-1} \\ h_{22,t-1} \end{array} \right)
+$$
+
+Para estimar o processo, é necessário sugerir os 'chutes' iniciais para o algoritmo de otimização. Façamos então:  
+
+$$
+\textbf{w}_0=\textbf{1}_2 \\
+\textbf{A}_0=\textbf{I}_2 \\
+\textbf{B}_0=\textbf{I}_2 \\
+\textbf{R}_0=\textbf{I}_2 \\
+$$
+
+*OBS:* Se Considerarmos o chute inicial para $\textbf{w}_0=\textbf{0}_2$ ou $\textbf{w}_0=\underset{\sim}{\mu}$ o processo nao converge para um valor próximo ao valor correto dos parâmetros.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+### DCCt-GARCH (Tse e Tsui) e DCCe-GARCH (Engle)   
