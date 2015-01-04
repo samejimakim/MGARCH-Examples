@@ -1,6 +1,5 @@
 library(rugarch)
 library(ccgarch)
-
 library(rmgarch)
 library(gogarch)
 
@@ -24,13 +23,13 @@ R<-matrix(c(1,0.5,-0.5,1),ncol=2,byrow=T)
 
 ##################### CCC-GARCH ######################
 ### EXEMPLOS USANDO O PACOTE 'ccgarch'
-
+#Args:
 # 'nobs'  a number of observations to be simulated (T)
 # 'a'     a vector of constants in the GARCH equation (N×1)
-# 'A'     an ARCH parameter matrix in the GARCH equation. A can be a diagonal matrix for the original CCC-GARCH model 
-#         or a full matrix for the extended model (N×N)
-# 'B'     a GARCH parameter matrix in the GARCH equation. B can be a diagonal matrix for the original CCC-GARCH model 
-#         or a full matrix for the extended model (N×N)
+# 'A'     an ARCH parameter matrix in the GARCH equation. A can be a diagonal matrix for the
+#         original CCC-GARCH model or a full matrix for the extended model (N×N)
+# 'B'     a GARCH parameter matrix in the GARCH equation. B can be a diagonal matrix for the
+#         original CCC-GARCH model  or a full matrix for the extended model (N×N)
 # 'R'     a constant conditional correlation matrix (N×N)
 # 'd.f'   the degrees of freedom parameter for the t-distribution
 # 'model' "diagonal" for the diagonal model and "extended" for the extended model
@@ -45,8 +44,8 @@ H1<-eccc.sim(nobs=1000, a=a1, A=A1, B=B1, R=R1,  model="diagonal")
 #'eps'    a matrix of the simulated time series with (E)CCC-GARCH process (T × N )
 
 par(mfrow=c(1,2))
-plot.ts(H$eps)
-plot.ts(H$h)
+plot.ts(H1$eps)
+plot.ts(H1$h)
 
 # > a1
 # [1] 0.05 0.02
@@ -87,11 +86,28 @@ w0=c(1,1)
 A0=diag(2)
 B0=diag(2)
 R0=diag(2)
-fit<-eccc.estimation(a=w0,A=A0,B=B0,R=R0,model="diagonal",dvar=H1$eps)
-#fit$out
-fit$para.mat
+fit1<-eccc.estimation(a=w0,A=A0,B=B0,R=R0,model="diagonal",dvar=H1$eps,method="CG" )
 
-DCCtest(H1$eps)
+names(fit1)
+# "out"       "h"         "std.resid" "opt"       "para.mat" 
+
+fit1$opt
+# $convergence == 0 ## Means convergence criteria has reached
+
+fit1$out
+fit1$para.mat
+
+# AJUSTE DO MODELO CRIADO ACIMA VIA rmgarch
+
+### EXEMPLOS SIMULADOS USANDO O PACOTE 'rmgarch'
+spec1 = ugarchspec(distribution = "norm")
+mspec = multispec(c(spec1,spec1))
+fitspec=dccspec(mspec,VAR=TRUE,lag=1,dccOrder=c(1,1),model="DCC",distribution="mvnorm")
+fit2=dccfit(fitspec,H1$eps)
+
+
+
+
 
 H2<-dccsim(fitORspec, n.sim = 1000, n.start = 0, m.sim = 2,
            startMethod = c("unconditional"),Qbar = NULL, Nbar = NULL,
@@ -101,7 +117,7 @@ H2<-dccsim(fitORspec, n.sim = 1000, n.start = 0, m.sim = 2,
 #### Conferir processo simulado no ccgarch - ou o processo simulado nao eh o especificado ou o ajuste do ccgarch eh ruim mesmo.
 ### Simular e ajustar usando o rmgarch para comparar com os resultados do ccgarch
 
-### REplicar este processo para o dccgarch
+### Replicar este processo para o dccgarch
 ### SIMULAR PROCESSO COM CARGAS FATORIAIS!!!!!
 
 
@@ -120,15 +136,7 @@ H2<-dccsim(fitORspec, n.sim = 1000, n.start = 0, m.sim = 2,
 
 
 ##################### DCC-GARCH #################
-### EXEMPLOS USANDO O PACOTE 'ccgarch' 
-#Args:
-# 'nobs'    a number of observations to be simulated (T)
-# 'a'       a vector of constants in the GARCH equation (N×1)
-# 'A'       an ARCH parameter matrix in the GARCH equation. A can be a diagonal matrix for the original CCC-GARCH model 
-#           or a full matrix for the extended model (N×N)
-# 'B'       a GARCH parameter matrix in the GARCH equation. B can be a diagonal matrix for the original CCC-GARCH model 
-#           or a full matrix for the extended model (N×N)
-# 'R'       a constant conditional correlation matrix (N×N)
+## Usando o pacote ccgarch tambem é possivel simular processos dcc garch. abaixo simularemos um processo dcc-garch com o ccgarch
 #'dcc.para' a vector of the DCC parameters (2 × 1) -- corresponds to (theta1,theta2) in 12.33
 # 'd.f'     the degrees of freedom parameter for the t-distribution
 # 'model'   "diagonal" for the diagonal model and "extended" for the extended model
@@ -204,20 +212,20 @@ plot.ts(dcc.data.t$h)
 gogarchsim(fit, n.sim = 1, n.start = 0, m.sim = 1,
            startMethod = c("unconditional", "sample"), prereturns = NA, preresiduals = NA,
            presigma = NA, mexsimdata = NULL, rseed = NULL, cluster = NULL, ...)
-Arguments
-fit A GO-GARCH fit object of class goGARCHfit.
-n.sim The simulation horizon.
-n.start The burn-in sample.
-m.sim The number of simulations.
-startMethod Starting values for the simulation. Valid methods are “unconditional” for the
-expected values given the density, and “sample” for the ending values of the
-actual data from the fit object.
-prereturns Allows the starting return data to be provided by the user.
-preresiduals Allows the starting factor residuals to be provided by the user.
-presigma Allows the starting conditional factor sigma to be provided by the user.
-mexsimdata A list of matrices with the simulated lagged external variables (if any). The list
-should be of size m.sim and the matrices each have n.sim + n.start rows.
-rseed Optional seeding value(s) for the random number generator.
-cluster A cluster object created by calling makeCluster from the parallel package. If
-it is not NULL, then this will be used for parallel estimation (remember to stop
-                                                                the cluster on completion).
+# Arguments
+# fit A GO-GARCH fit object of class goGARCHfit.
+# n.sim The simulation horizon.
+# n.start The burn-in sample.
+# m.sim The number of simulations.
+# startMethod Starting values for the simulation. Valid methods are “unconditional” for the
+# expected values given the density, and “sample” for the ending values of the
+# actual data from the fit object.
+# prereturns Allows the starting return data to be provided by the user.
+# preresiduals Allows the starting factor residuals to be provided by the user.
+# presigma Allows the starting conditional factor sigma to be provided by the user.
+# mexsimdata A list of matrices with the simulated lagged external variables (if any). The list
+# should be of size m.sim and the matrices each have n.sim + n.start rows.
+# rseed Optional seeding value(s) for the random number generator.
+# cluster A cluster object created by calling makeCluster from the parallel package. If
+# it is not NULL, then this will be used for parallel estimation (remember to stop
+#                                                                 the cluster on completion).

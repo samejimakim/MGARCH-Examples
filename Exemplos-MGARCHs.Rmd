@@ -17,10 +17,13 @@ library(rugarch)
 library(ccgarch)
 library(rmgarch)
 library(gogarch)
+library(knitcitations)
+cite_options(cite.style = "numeric")
 options(xtable.comment = FALSE)
 ```
+<font color="red">  
 
-<center><h1> Exemplos para processos GARCH multivariados</h1></center>    
+# Exemplos para processos GARCH multivariados
 
 * VEC e BEKK  
 * F-GARCH, O-GARCH e GO-GARCH  
@@ -32,7 +35,7 @@ Pacote `gogarch` e pacote `rmgarch`
 
 ## ICA-GARCH e GICA-GARCH   
 Pacote `rmgarch`
-
+</font>
 
 
 ## CCC-GARCH e DCC-GARCH    
@@ -40,15 +43,15 @@ Pacote `rmgarch`
 
 Modelos CCC-GARCH são da forma:  
 
-$$
+(@eqcccgarch) $$
 \label{eq:cccgarch}
 \textbf{H}_t = \textbf{D}_t \times \textbf{R}  \times \textbf{D}_t \\
 \textbf{D}_t= \left[diag\{h_{ii,t}^{1/2}\}\right],i=1,\dots,n  
 $$
 
 $h_{ii,t}$ é um modelo GARCH univariado qualquer e $\textbf{R}= \left[\rho_{i,j}\right],i,j=1,\dots,n$ e $\rho_{i,i}=1,i=1,\dots,n$ é uma matriz simétrica, positiva definida.   
-Teremos que $\textbf{H}_t$ será positva definida se e só se todas as n variâncias condicionais forem positivas e $\textbf{H_t}\ge 0$.
-Em particular um CCC-GARCH(1,1) seria da forma dada em \ref{eq:cccgarch}, com $h_{ii,t},i=1,\dots,n$ definidos por   
+Teremos que $\textbf{H}_t$ será positva definida se e só se todas as n variâncias condicionais forem positivas e $\textbf{H}_t\ge 0$.
+Em particular um CCC-GARCH(1,1) seria da forma dada em  (@eqcccgarch), com $h_{ii,t},i=1,\dots,n$ definidos por   
 $$
 h_{ii,t}=w_i+\alpha_i\epsilon^2_{i,t-1}+\beta_i h_{ii,t-1},i=1\dots,n
 $$  
@@ -57,12 +60,12 @@ Ou seja, cada $h_{ii,t}$ é dado por um GARCH(1,1).
 ### Exemplo Simulado   
 Utilizando o pacote `ccgarch`, simularemos um modelo CCC-GARCH(1,1) bivariado definido por:
 $$
-\textbf{R}=\left(\begin{array}{cc} 1 & -0.3 \\ 0.8 & 1\end{array}\right) \\
+\textbf{R}=\left(\begin{array}{cc} 1 & 0.8 \\ 0.8 & 1\end{array}\right) \\
 h_{11,t}= 0.05 + 0.5 \epsilon^2_{1,t-1}+ 0.2 h_{11,t-1} \\
 h_{22,t}= 0.02 + 0.7 \epsilon^2_{2,t-1}+ 0.1 h_{22,t-1} 
 $$  
 
-```{r}
+```{r sim1}
 ### EXEMPLOS USANDO O PACOTE 'ccgarch'
 
 # 'nobs'  a number of observations to be simulated (T)
@@ -85,16 +88,15 @@ H1<-eccc.sim(nobs=1000, a1, A1, B1, R1, d.f=5, model="diagonal")
 #'eps'    a matrix of the simulated time series with (E)CCC-GARCH process (T × N )
 ```
 
-```{r}
-plot.ts(H$eps, main = "Processos simulados")
+```{r fig1_sim1}
+plot.ts(H1$eps, main = "Processos simulados")
 ```
 
-```{r}
-plot.ts(H$h, main="Volatilidade observada nos processos simulados")
+```{r fig2_sim1}
+plot.ts(H1$h, main="Volatilidade observada nos processos simulados")
 ```
 
-
-Para o processo simulado, vamos estimar os parâmetros utilizando o mesmo pacote, `eccc.estimation`.
+Para o processo simulado, vamos estimar os parâmetros utilizando o mesmo pacote, com a função `eccc.estimation`.
 Temos duas séries simuladas, e suporemos então que elas seguem um CCC-GARCH(1,1) e são regidas pelo processo:  
 $$
 \textbf{h}_t=\left(
@@ -121,6 +123,22 @@ $$
 
 *OBS:* Se Considerarmos o chute inicial para $\textbf{w}_0=\textbf{0}_2$ ou $\textbf{w}_0=\underset{\sim}{\mu}$ o processo nao converge para um valor próximo ao valor correto dos parâmetros.
 
+```{r est1_code}
+w0=c(1,1)
+A0=diag(2)
+B0=diag(2)
+R0=diag(2)
+fit<-eccc.estimation(a=w0,A=A0,B=B0,R=R0,model="diagonal",dvar=H1$eps)
+fit$opt$convergence
+# $convergence == 0 ## Means convergence criteria has reached
+```
+
+Os resultados da estimação foram:  
+
+```{r est1_results}
+fit$para.mat
+fit$out
+```
 
 
 
@@ -143,5 +161,7 @@ $$
 
 
 
+<font color="red">  
 
 ### DCCt-GARCH (Tse e Tsui) e DCCe-GARCH (Engle)   
+<\font>
