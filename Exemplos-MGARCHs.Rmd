@@ -2,16 +2,19 @@
 output:
     html_document:
         fig_caption: true
+        number_sections: true
+        theme: readable
 --- 
 ---
-title: "Exemplos-MGARCH"
+title: "Exemplos para processos GARCH multivariados "
 author: "Kim Samejima Lopes"
 date: "11-12-2014"
 ---  
   
 [//]: #         includes:
 [//]: #             in_header: mystyles.sty  
-[//]: # 
+[//]: #  theme ("default", "cerulean", "journal", "flatly", "readable", "spacelab", "united", or "cosmo")
+
 ```{r,echo=F,warning=FALSE,message=FALSE,include=FALSE}
 library(rugarch)
 library(ccgarch)
@@ -21,25 +24,27 @@ library(knitcitations)
 cite_options(cite.style = "numeric")
 options(xtable.comment = FALSE)
 ```
-<font color="red">  
 
-# Exemplos para processos GARCH multivariados
+
+
+Este texto trata da construção de exemplos de modelos GARCH multivariados. Para tanto, considere os modelos a seguir:  
 
 * VEC e BEKK  
+* CCC-GARCH e DCC-GARCH  
 * F-GARCH, O-GARCH e GO-GARCH  
 * ICA-GARCH e GICA-GARCH   
-* CCC-GARCH e DCC-GARCH  
-
-## F-GARCH, O-GARCH e GO-GARCH  
-Pacote `gogarch` e pacote `rmgarch`  
-
-## ICA-GARCH e GICA-GARCH   
-Pacote `rmgarch`
-</font>
 
 
-## CCC-GARCH e DCC-GARCH    
-### CCC-GARCH    
+As próximas sessões apresentarão exemplos de tais modelos utilizando as bibliotecas `ccgarch,rmgarch e gogarch` do **R**.    
+
+<font color="red">  
+
+# VEC e BEKK  
+
+</font>  
+
+# CCC-GARCH e DCC-GARCH    
+## CCC-GARCH    
 
 Modelos CCC-GARCH são da forma:  
 
@@ -50,7 +55,7 @@ Modelos CCC-GARCH são da forma:
 $$
 
 $h_{ii,t}$ é um modelo GARCH univariado qualquer e $\textbf{R}= \left[\rho_{i,j}\right],i,j=1,\dots,n$ e $\rho_{i,i}=1,i=1,\dots,n$ é uma matriz simétrica, positiva definida.   
-Teremos que $\textbf{H}_t$ será positva definida se e só se todas as n variâncias condicionais forem positivas e $\textbf{H}_t\ge 0$.
+Teremos que $\textbf{H}_t$ será positiva definida se e só se todas as n variâncias condicionais forem positivas e $\textbf{H}_t\ge 0$.
 Em particular um CCC-GARCH(1,1) seria da forma dada em  (@eqcccgarch), com $h_{ii,t},i=1,\dots,n$ definidos por   
 $$
 h_{ii,t}=w_i+\alpha_i\epsilon^2_{i,t-1}+\beta_i h_{ii,t-1},i=1\dots,n
@@ -140,28 +145,42 @@ fit$para.mat
 fit$out
 ```
 
+É possivel ainda estimar os resultados do processo CCC-GARCH simulado na seção anterior utilizando o pacote `rmgarch`, considerando que o modelo CCC-GARCH é um caso especial do DCC-GARCH, quando a matriz $R$ é fixa para todo *t*.
+
+```{r}
+spec1 = ugarchspec(distribution = "norm")
+mspec = multispec(c(spec1,spec1))
+fitspec=dccspec(mspec,VAR=TRUE,lag=1,dccOrder=c(1,1),model="DCC",distribution="mvnorm")
+fit2=dccfit(fitspec,H1$eps)
+
+```
 
 
+## DCC-GARCH   
+
+Modelos DCC-GARCH são uma generalização do caso CCC-GARCH, isto é, temos a matris **R** não necessáriamente fixa, ou seja, ela varia no tempo:  
+
+(@eqdccgarch) $$
+\label{eq:dccgarch}
+\textbf{H}_t = \textbf{D}_t \times \textbf{R}_t  \times \textbf{D}_t \\
+$$
+
+$\textbf{D}_t$ é definida como em (@eqcccgarch) e $\textbf{R}_t$ tem expressão específica. Tse e Tsui(2002) sugerem $\textbf{R}_t$ definida por $\textbf{R_t}=(1-\theta_1-\theta_2)\textbf{R}+\theta_1\Psi_{t-1}+\theta_2\textbf{R}_{t-1}$ em que $\textbf{R}= \left[\rho_{i,j}\right], i,j = 1,\dots,n$ e $\rho_{i,i}=1,i=1,\dots,n$ é uma matriz simétrica, positiva definida e $\Psi_{t-1}$ uma matriz de correlações de $\epsilon_\tau$ definida convenientemente.   
+Já Engle(2002) propõe $\textbf{R}_t$ como $\left[diag\{\textbf{Q}_t\}\right]^{1/2}\times \textbf{Q}_t \times \left[diag\{\textbf{Q}_t\}\right]^{1/2}$, com $\textbf{Q}_t$ não negativa definida, de ordem $n\times n$ definida de forma semelhante a $\textbf{R}_t$.  
 
 
+### Exemplo Simulado   
+Para simular o processo DCC-GARCH, consideraremos os pacotes `ccgarch` e o pacote `rmgarch`, para que possamos comparar suas performances.  
 
+<font color="red">   
 
+## DCCe-GARCH (Engle)   
 
+# F-GARCH, O-GARCH e GO-GARCH  
+Pacote `gogarch` e pacote `rmgarch`  
 
+# ICA-GARCH e GICA-GARCH   
+Pacote `rmgarch`  
 
+</font>
 
-
-
-
-
-
-
-
-
-
-
-
-<font color="red">  
-
-### DCCt-GARCH (Tse e Tsui) e DCCe-GARCH (Engle)   
-<\font>

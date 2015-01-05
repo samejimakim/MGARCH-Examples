@@ -115,7 +115,8 @@ H2<-dccsim(fitORspec, n.sim = 1000, n.start = 0, m.sim = 2,
            VAR.fit = NULL, prerealized = NULL, ...)
 
 #### Conferir processo simulado no ccgarch - ou o processo simulado nao eh o especificado ou o ajuste do ccgarch eh ruim mesmo.
-### Simular e ajustar usando o rmgarch para comparar com os resultados do ccgarch
+#### Rodar o dccfit do pacote ccgarch para ajustar o ccgarch simulado e comparar os resultados
+### Simular e ajustar dcc-garch usando o rmgarch para comparar com os resultados do ccgarch
 
 ### Replicar este processo para o dccgarch
 ### SIMULAR PROCESSO COM CARGAS FATORIAIS!!!!!
