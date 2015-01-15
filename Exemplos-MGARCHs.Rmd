@@ -2,14 +2,24 @@
 output:
     html_document:
         fig_caption: true
+        highlight: tango
         number_sections: true
         theme: readable
+        self_contained: yes   
+    pdf_document: default
 --- 
 ---
 title: "Exemplos para processos GARCH multivariados "
-author: "Kim Samejima Lopes"
-date: "11-12-2014"
----  
+author: "Kim Samejima Lopes"  
+date: '`r format(Sys.time(), "%d %b, %Y")`'
+  
+---
+   
+   <style>
+pre code.bash {
+  background: lightyellow;
+}
+</style> 
   
 [//]: #         includes:
 [//]: #             in_header: mystyles.sty  
@@ -20,6 +30,7 @@ library(rugarch)
 library(ccgarch)
 library(rmgarch)
 library(gogarch)
+library(MTS)
 library(knitcitations)
 cite_options(cite.style = "numeric")
 options(xtable.comment = FALSE)
@@ -29,7 +40,7 @@ options(xtable.comment = FALSE)
 
 Este texto trata da construção de exemplos de modelos GARCH multivariados. Para tanto, considere os modelos a seguir:  
 
-* VEC e BEKK  
+* VEC e BEKK  (Pacote `MTS`)
 * CCC-GARCH e DCC-GARCH  
 * F-GARCH, O-GARCH e GO-GARCH  
 * ICA-GARCH e GICA-GARCH   
@@ -58,62 +69,66 @@ $h_{ii,t}$ é um modelo GARCH univariado qualquer e $\textbf{R}= \left[\rho_{i,j
 Teremos que $\textbf{H}_t$ será positiva definida se e só se todas as n variâncias condicionais forem positivas e $\textbf{H}_t\ge 0$.
 Em particular um CCC-GARCH(1,1) seria da forma dada em  (@eqcccgarch), com $h_{ii,t},i=1,\dots,n$ definidos por   
 $$
-h_{ii,t}=w_i+\alpha_i\epsilon^2_{i,t-1}+\beta_i h_{ii,t-1},i=1\dots,n
+h_{ii,t}=w_i+a_i\epsilon^2_{i,t-1}+b_i h_{ii,t-1},i=1\dots,n
 $$  
 Ou seja, cada $h_{ii,t}$ é dado por um GARCH(1,1).
 
 ### Exemplo Simulado   
 Utilizando o pacote `ccgarch`, simularemos um modelo CCC-GARCH(1,1) bivariado definido por:
 $$
-\textbf{R}=\left(\begin{array}{cc} 1 & 0.8 \\ 0.8 & 1\end{array}\right) \\
-h_{11,t}= 0.05 + 0.5 \epsilon^2_{1,t-1}+ 0.2 h_{11,t-1} \\
-h_{22,t}= 0.02 + 0.7 \epsilon^2_{2,t-1}+ 0.1 h_{22,t-1} 
+\textbf{R}=\left(\begin{array}{cc} 1 & 0.3 \\ 0.3 & 1\end{array}\right) \\
+h_{11,t}= 0.05 + 0.1 \epsilon^2_{1,t-1}+ 0.6 h_{11,t-1} \\
+h_{22,t}= 0.02 + 0.05 \epsilon^2_{2,t-1}+ 0.75 h_{22,t-1} 
 $$  
 
 ```{r sim1}
 ### EXEMPLOS USANDO O PACOTE 'ccgarch'
+# eccc.sim Arguments:
 
 # 'nobs'  a number of observations to be simulated (T)
 # 'a'     a vector of constants in the GARCH equation (N×1)
-# 'A'     an ARCH parameter matrix in the GARCH equation. A can be a diagonal matrix for the original CCC-GARCH model 
-#         or a full matrix for the extended model (N×N)
-# 'B'     a GARCH parameter matrix in the GARCH equation. B can be a diagonal matrix for the original CCC-GARCH model 
-#         or a full matrix for the extended model (N×N)
+# 'A'     an ARCH parameter matrix in the GARCH equation. 
+#         Can be a diagonal matrix for the original CCC-GARCH model or a full
+#         matrix for the extended model (N×N)
+# 'B'     a GARCH parameter matrix in the GARCH equation. 
+#         Can be a diagonal matrix for the original CCC-GARCH model or a full
+#         matrix for the extended model (N×N)
 # 'R'     a constant conditional correlation matrix (N×N)
 # 'd.f'   the degrees of freedom parameter for the t-distribution
 # 'model' "diagonal" for the diagonal model and "extended" for the extended model
 
-a1=c(0.05,0.02)
-A1=matrix(c(0.5,0,0,0.7),ncol=2)
-B1=matrix(c(0.2,0,0,0.1),ncol=2)
-R1=matrix(c(1,-0.3,0.8,1),ncol=2)
-H1<-eccc.sim(nobs=1000, a1, A1, B1, R1, d.f=5, model="diagonal")
+c.a1=c(0.05,0.02)
+c.A1=matrix(c(0.1,0,0,0.05),ncol=2)
+c.B1=matrix(c(0.6,0,0,0.75),ncol=2)
+c.R1=matrix(c(1,0.3,0.3,1),ncol=2)
+c.H1<-eccc.sim(nobs=1000, c.a1, c.A1, c.B1, c.R1, d.f=5, model="diagonal")
 
 #'h'      a matrix of the simulated conditional variances (T × N )
 #'eps'    a matrix of the simulated time series with (E)CCC-GARCH process (T × N )
 ```
 
 ```{r fig1_sim1}
-plot.ts(H1$eps, main = "Processos simulados")
+plot.ts(c.H1$eps, main = "Processos simulados")
 ```
 
 ```{r fig2_sim1}
-plot.ts(H1$h, main="Volatilidade observada nos processos simulados")
+plot.ts(c.H1$h, main="Volatilidade observada nos processos simulados")
 ```
 
 Para o processo simulado, vamos estimar os parâmetros utilizando o mesmo pacote, com a função `eccc.estimation`.
 Temos duas séries simuladas, e suporemos então que elas seguem um CCC-GARCH(1,1) e são regidas pelo processo:  
-$$
+
+(@eqccc_h) $$
 \textbf{h}_t=\left(
 \begin{array}{c}
  h_{11,t} \\ h_{22,t}
 \end{array}
 \right)=\textbf{w}+\textbf{A}\textbf{$\epsilon$}_{t-1}\textbf{$\epsilon$}_{t-1}^T+\textbf{B}\textbf{h}_{t-1}=\\
 =
-\left(\begin{array}{c} w_{1} \\ w_{2} \end{array} \right) + 
-\left(\begin{array}{cc} \alpha_{1} & 0 \\ 0 & \alpha_{2} \end{array} \right) 
+\left(\begin{array}{c} a_{1} \\ a_{2} \end{array} \right) + 
+\left(\begin{array}{cc} A_{11} & 0 \\ 0 & A_{22} \end{array} \right) 
 \left(\begin{array}{c} \epsilon^2_{1,t-1} \\ \epsilon^2_{2,t-1} \end{array} \right) + 
-\left(\begin{array}{cc} \beta_{1}  & 0 \\ 0 & \beta_{2} \end{array} \right) 
+\left(\begin{array}{cc} B_{11}  & 0 \\ 0 & B_{22} \end{array} \right) 
 \left(\begin{array}{c} h_{11,t-1} \\ h_{22,t-1} \end{array} \right)
 $$
 
@@ -126,55 +141,177 @@ $$
 \textbf{R}_0=\textbf{I}_2 \\
 $$
 
-*OBS:* Se Considerarmos o chute inicial para $\textbf{w}_0=\textbf{0}_2$ ou $\textbf{w}_0=\underset{\sim}{\mu}$ o processo nao converge para um valor próximo ao valor correto dos parâmetros.
-
 ```{r est1_code}
-w0=c(1,1)
-A0=diag(2)
-B0=diag(2)
-R0=diag(2)
-fit<-eccc.estimation(a=w0,A=A0,B=B0,R=R0,model="diagonal",dvar=H1$eps)
-fit$opt$convergence
+c.w0=c(1,1)
+c.A0=diag(2)
+c.B0=diag(2)
+c.R0=diag(2)
+c.fit1<-eccc.estimation(a=c.w0,A=c.A0,B=c.B0,R=c.R0,model="diagonal",dvar=c.H1$eps)
+c.fit1$opt$convergence
 # $convergence == 0 ## Means convergence criteria has reached
 ```
 
 Os resultados da estimação foram:  
 
 ```{r est1_results}
-fit$para.mat
-fit$out
+c.fit1$para.mat
+c.fit1$out
 ```
+   
+[//]: #   OBS: Se Considerarmos o chute inicial para w0=02 ou w0=\mu o processo nao converge para um valor próximo ao valor correto dos parâmetros.
 
-É possivel ainda estimar os resultados do processo CCC-GARCH simulado na seção anterior utilizando o pacote `rmgarch`, considerando que o modelo CCC-GARCH é um caso especial do DCC-GARCH, quando a matriz $R$ é fixa para todo *t*.
+[//]: #   É possivel ainda estimar os resultados do processo CCC-GARCH simulado na seção anterior utilizando o pacote `rmgarch`, considerando que o modelo CCC-GARCH é um caso especial do DCC-GARCH, quando a matriz $R$ é fixa para todo *t*.
 
-```{r}
+```{r, include=FALSE}
+#NOT TO RUN#
 spec1 = ugarchspec(distribution = "norm")
 mspec = multispec(c(spec1,spec1))
 fitspec=dccspec(mspec,VAR=TRUE,lag=1,dccOrder=c(1,1),model="DCC",distribution="mvnorm")
 fit2=dccfit(fitspec,H1$eps)
-
 ```
-
 
 ## DCC-GARCH   
 
-Modelos DCC-GARCH são uma generalização do caso CCC-GARCH, isto é, temos a matris **R** não necessáriamente fixa, ou seja, ela varia no tempo:  
+Modelos DCC-GARCH são uma generalização do caso CCC-GARCH, isto é, temos a matris **R** não necessariamente fixa, ou seja, ela varia no tempo:  
 
 (@eqdccgarch) $$
 \label{eq:dccgarch}
 \textbf{H}_t = \textbf{D}_t \times \textbf{R}_t  \times \textbf{D}_t \\
 $$
 
-$\textbf{D}_t$ é definida como em (@eqcccgarch) e $\textbf{R}_t$ tem expressão específica. Tse e Tsui(2002) sugerem $\textbf{R}_t$ definida por $\textbf{R_t}=(1-\theta_1-\theta_2)\textbf{R}+\theta_1\Psi_{t-1}+\theta_2\textbf{R}_{t-1}$ em que $\textbf{R}= \left[\rho_{i,j}\right], i,j = 1,\dots,n$ e $\rho_{i,i}=1,i=1,\dots,n$ é uma matriz simétrica, positiva definida e $\Psi_{t-1}$ uma matriz de correlações de $\epsilon_\tau$ definida convenientemente.   
-Já Engle(2002) propõe $\textbf{R}_t$ como $\left[diag\{\textbf{Q}_t\}\right]^{1/2}\times \textbf{Q}_t \times \left[diag\{\textbf{Q}_t\}\right]^{1/2}$, com $\textbf{Q}_t$ não negativa definida, de ordem $n\times n$ definida de forma semelhante a $\textbf{R}_t$.  
+$\textbf{D}_t$ é definida como em (@eqcccgarch) e $\textbf{R}_t$ tem expressão específica. Tse e Tsui(2002) sugerem $\textbf{R}_t$ definida por (DCCt-GARCH)   
+
+(@eqtse) $$\textbf{R}_t=(1-\theta_1-\theta_2)\textbf{R}+\theta_1\Psi_{t-1}+\theta_2\textbf{R}_{t-1}$$  
+
+Em que $\textbf{R}= \left[\rho_{i,j}\right], i,j = 1,\dots,n$ e $\rho_{i,i}=1,i=1,\dots,n$ é uma matriz simétrica, positiva definida e $\Psi_{t-1}$ uma matriz de correlações de $\epsilon_\tau$ definida convenientemente.   
+Já Engle(2002) propõe $\textbf{R}_t$ como (DCCe-GARCH):     
+
+(@eqengle) $$\textbf{R}_t=\left[diag\{\textbf{Q}_t\}\right]^{1/2}\times \textbf{Q}_t \times \left[diag\{\textbf{Q}_t\}\right]^{1/2}$$  
+
+Com $\textbf{Q}_t$ não negativa definida, de ordem $n\times n$ definida de forma semelhante a $\textbf{R}_t$ em (@eqtse), isto é:   
+
+$$\textbf{Q}_t=(1-\alpha-\beta)\textbf{Q}+\alpha \textbf{u}_{t-1}\textbf{u}^T_{t-1}+\beta\textbf{Q}_{t-1}$$  
+  
+### Exemplo Simulado (DCCe-GARCH)   
+Para simular o processo DCC-GARCH, consideraremos os pacotes `ccgarch`. Compararemos o resultado da estimação através dos pacotes `ccgarch`, `rmgarch` e `MTS`, para que possamos comparar suas performances. A parametrização utilizada será aquela proposta por Engle ( veja equação @eqengle).
+
+```{r sim2}
+### EXEMPLOS USANDO O PACOTE 'ccgarch'
+# dcc.sim Arguments:
+
+# 'nobs'     a number of observations to be simulated (T )
+# 'a'        a vector of constants in the vector GARCH equation (N × 1)
+# 'A'        an ARCH parameter matrix in the vector GARCH equation (N × N )
+# 'B'        a GARCH parameter matrix in the vector GARCH equation (N × N )
+# 'R'        an unconditional correlation matrix (N × N )
+# 'dcc.para' a vector of the DCC parameters (2 × 1)
+# 'd.f'      the degrees of freedom parameter for the t-distribution
+# 'model'    a character string describing the model. 
+#            "diagonal" for the diagonal model  and "extended" for the extended 
+#            (full ARCH and GARCH parameter matrices) model
+
+d.a1=c(0.05,0.02)
+d.A1=matrix(c(0.1,0,0,0.05),ncol=2)
+d.B1=matrix(c(0.6,0,0,0.75),ncol=2)
+d.R1=matrix(c(1,0.3,0.3,1),ncol=2)
+d.alpha1 = 0.1
+d.beta1  = 0.2
+d.H1<-dcc.sim(nobs=1000, d.a1, d.A1, d.B1, d.R1, dcc.para=c(d.alpha1,d.beta1), d.f=5, model="diagonal")
+
+# 'dcc'      a matrix of the simulated dynamic conditional correlations (T × N 2 )
+# 'h'        a matrix of the simulated conditional variances (T × N )
+# 'eps'      a matrix of the simulated time series with DCC-GARCH process (T × N )
+
+```
+
+```{r fig1_sim2}
+plot.ts(d.H1$eps, main = "Processos simulados")
+```
+
+```{r fig2_sim2}
+plot.ts(d.H1$h, main="Volatilidade observada nos processos simulados")
+```
+
+```{r fig3_sim2}
+plot.ts(d.H1$dcc, main="Dt")
+```
+
+### Estimação via `ccgarch`  
+
+Para estimar os parâmetros do processo simulado acima, considere a função `dcc.est` do `ccgarch`, que estima os parâmetros via máxima verossimilhança em dois estágios.
+Assim como no caso do CCC-GARCH, utilizaremos as seguintes quantidades iniciais para o processo iterativo:
+
+$$
+\textbf{A}_0=\textbf{I}_2 \\
+\textbf{B}_0=\textbf{I}_2 \\
+\textbf{R}_0=\textbf{I}_2 \\
+\alpha=0.5\\
+\beta=0.5
+$$
+
+```{r est2_code}
+d.w0=c(0.2,0.2)
+d.A0=diag(2)
+d.B0=diag(2)
+d.alpha0 = 0.5
+d.beta0  = 0.5
+d.fit1<-dcc.estimation(inia=d.w0,iniA=d.A0,iniB=d.B0,ini.dcc=d.w0,model="diagonal",dvar=d.H1$eps)
+```
+
+Os resultados da estimação seguem abaixo:
+
+```{r}
+d.fit1$out
+```
+
+### Estimação via `rmgarch`
+
+Novamente, utilizaremos a parametrização para $\textbf{R}_t$ proposta por Engle (2002) (equação @eqengle). Para estimar o processo `rmgarch` é necessário inicialmente declarar as especificações do modelo. Para tanto, considerando normalidade   
 
 
-### Exemplo Simulado   
-Para simular o processo DCC-GARCH, consideraremos os pacotes `ccgarch` e o pacote `rmgarch`, para que possamos comparar suas performances.  
+```{r}
+spec1 = ugarchspec(distribution = "std")
+mspec = multispec(c(spec1,spec1))
+fitspec=dccspec(mspec,VAR=TRUE,lag=1,dccOrder=c(1,1),model="DCC",distribution="mvt")
+
+d.fit2=dccfit(fitspec,d.H1$eps)
+```
+
+O resultado do modelo ajustado é o que se segue:
+
+```{r}
+d.fit2
+```
+
+### Exemplo Simulado via `MTS`   
+
+O ajuste do modelo DCC-GARCH via pacote `MTS` é apresentado por Tsay(2014) e é realizado em duas etapas. Em primeiro lugar, ajusta-se um modelo GARCH é ajustado para as componentes da série multivariada e depois os paretros do modelo DCC-GARCH são estimados. Inicialmente, apenas o modelo DCC(1,1) está implementado. A sintaxe para o ajuste do processo simulado é:
+
+```{r}
+mtspre.fit3=dccPre(d.H1$eps, include.mean = T, p = 0, cond.dist = "std")
+d.fit3=dccFit(mtspre.fit3$sresi, type = "Engle", theta = c(d.alpha0, d.beta0),
+       ub = c(0.92, 0.92), lb = c( 1e-04, 1e-04), cond.dist = "std", df = 5)
+```
+
+Os resultados para o ajuste do modelo simulado são apresentados a seguir:
+
+```{r}
+names(d.fit3$estimates)<-c("theta1","theta2","df.t")
+mtspre.fit3$est
+d.fit3$estimates
+```
+
+```{r fig4_sim2}
+plot.ts(d.fit3$rho.t,cex.lab=0.5,cex.axis=0.8, main = "Dt")
+```
+
+## Conclusões a cerca dos modelos CCC-GARCH e DCC-GARCH 
+
+Vimos tanto no exemplo do CCC-GARCH quanto no do DCC-GARCH que o pacote `ccgarch` não apresentou estimativas satisfatórias para os parâmetros dos modelos simulados, principalmente nos casos dos parâmetros do vetor **a** e da matriz **A** da equação (@eqccc_h) que define as componentes dos processos GARCH.   
+Da mesma forma, os pacotes `rmgarch` e `MTS` não apresentaram resultados próximos dos verdadeiros valores dos parâmetros. Dentre os três ajustes, o ajuste do pacote `MTS` foi o que apresentou menos discrepância, tendo maior viés na estimativa dos parâmetros do modelo DCC(1,1) do que nos modelos GARCH de sua primeira etapa.   
+
 
 <font color="red">   
-
-## DCCe-GARCH (Engle)   
 
 # F-GARCH, O-GARCH e GO-GARCH  
 Pacote `gogarch` e pacote `rmgarch`  
@@ -184,3 +321,18 @@ Pacote `rmgarch`
 
 </font>
 
+
+## Referências   
+
+* Engle, R.F. and Granger, C.W.J. , *Co-integration and Error Correction: Representation, Estimation, and Testing*, Econometrica, Vol. 55, No.2, pp. 251-76, 1987.     
+* Hannan, E.J. and Quinn, B.G. , *The Determination of the Order of an Autoregression*, Journal of the Royal Statistical Society. Series B (Methodological) V41(2):190--195, Wiley, 1979.  
+* Johansen, S., *Statistical Analysis of cointegration vectors*, Journal of Economic Dynamics and Control, 12, 231-254, 1988. 
+* Laurent S., *Analytical Derivates of the APARCH Model*, Computational Economics, V24, Issue 1, pp 51-57, August 2004,  Kluwer Academic Publishers.  
+* Morettin P.A., *Econometria Financeira*, Blucher 2ed. Sao Paulo, 2013.  
+* Morettin P.A. e Toloi, C.M.C, *Análise de Séries Temporais*, Blucher, Sao Paulo, 2006.  
+* Phillips, P.C.B. and Ouliaris, S., *Asymptotic Properties of Residual Based Tests for Cointegration*, Econometrica, Vol. 58, No. 1, 165–193, 1990.   
+* Shumway R.H. and Stoffer D.S., *Time Series Analysis and Its Applications: With R Examples*, 3rd ed. Springer Texts in Statistics, 2011.
+* Taylor, J.W., *A Quantile Regression Neural Network Approach to Estimating the Conditional Density of Multiperiod Returns*, Journal of Forecasting, 19:299--311, Wiley and Sons, 2000.  
+* Tsay, R.S., *Analysis of Financial Time Series*, 2nd ed., Wiley, 2005.
+* Tsay, R.S., *Multivariate Analysis of Time Series with R and Financial Applications*, Wiley and Sons, 2014.
+* Zivot, E., Wang, J., *Modeling Financial Time Series with S-PLUS*, 2nd ed., Springer, 2006.  
