@@ -1,4 +1,1 @@
-## Title created from DellPC32
-### Second try from RStudio
-### Third try
-### fourth try
+Still Pushing only by Shell not by Rstudio GUI
