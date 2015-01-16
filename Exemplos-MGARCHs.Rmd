@@ -23,7 +23,11 @@ pre code.bash {
   
 [//]: #         includes:
 [//]: #             in_header: mystyles.sty  
-[//]: #  theme ("default", "cerulean", "journal", "flatly", "readable", "spacelab", "united", or "cosmo")
+[//]: #  theme ("default", "cerulean", "journal", "flatly", "readable", "spacelab", "united", or "cosmo")   
+[//]: #  unset SSH_ASKPASS
+[//]: #  git config --global credential.helper 'cache --timeout=3600'
+[//]: #  git push -u origin master
+
 
 ```{r,echo=F,warning=FALSE,message=FALSE,include=FALSE}
 library(rugarch)
