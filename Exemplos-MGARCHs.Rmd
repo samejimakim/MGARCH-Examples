@@ -46,7 +46,7 @@ Este texto trata da construção de exemplos de modelos GARCH multivariados. Par
 
 * VEC e BEKK  (Pacote `MTS`)
 * CCC-GARCH e DCC-GARCH  
-* F-GARCH, O-GARCH e GO-GARCH  
+* GO-GARCH (F-GARCH, O-GARCH)  
 * ICA-GARCH e GICA-GARCH   
 
 
@@ -315,9 +315,23 @@ Vimos tanto no exemplo do CCC-GARCH quanto no do DCC-GARCH que o pacote `ccgarch
 Da mesma forma, os pacotes `rmgarch` e `MTS` não apresentaram resultados próximos dos verdadeiros valores dos parâmetros. Dentre os três ajustes, o ajuste do pacote `MTS` foi o que apresentou menos discrepância, tendo maior viés na estimativa dos parâmetros do modelo DCC(1,1) do que nos modelos GARCH de sua primeira etapa.   
 
 
+# GO-GARCH  
+Nos modelos GO-GARCH, estamos interessados em construir decomposições ortogonais para a matriz $\Sigma_t$. Em outras palavras, buscamos a seguinte igualdade:   
+
+$$
+\Sigma_t = M V_t M^T
+$$
+
+em que $V_t$ é a matriz de covariâncias das componentes latentes do processo, $\textbf{b}_t=(b_{1t},b_{2t},\dots,b_{kt}),k \ge n$, i.e., $V_t=Cov(\textbf{b}_t | \mathbb{F}_{t-1})$. Se a transformação acima existir, então as variáveis latentes podem ser expressas  por:   
+
+$$
+\textbf{b}_t = M^{-1} a_t
+$$
+
+Assumiremos que V_t é diagonal e que a variância não-condicional de $\textbf{b}_t$ é a matriz identidade $\textbf{I}_k$.
 <font color="red">   
 
-# F-GARCH, O-GARCH e GO-GARCH  
+
 Pacote `gogarch` e pacote `rmgarch`  
 
 # ICA-GARCH e GICA-GARCH   
