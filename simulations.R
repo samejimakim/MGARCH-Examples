@@ -51,11 +51,11 @@ R<-matrix(c(1,0.5,-0.5,1),ncol=2,byrow=T)
 # 'd.f'   the degrees of freedom parameter for the t-distribution
 # 'model' "diagonal" for the diagonal model and "extended" for the extended model
 
-a1=c(0.05,0.02)
-A1=matrix(c(0.5,0,0,0.7),ncol=2)
-B1=matrix(c(0.2,0,0,0.1),ncol=2)
-R1=matrix(c(1,0.8,0.8,1),ncol=2)
-H1<-eccc.sim(nobs=1000, a=a1, A=A1, B=B1, R=R1,  model="diagonal")
+c.a1=c(0.05,0.02)
+c.A1=matrix(c(0.1,0,0,0.05),ncol=2)
+c.B1=matrix(c(0.6,0,0,0.75),ncol=2)
+c.R1=matrix(c(1,0.3,0.3,1),ncol=2)
+c.H1<-eccc.sim(nobs=1000, c.a1, c.A1, c.B1, c.R1, d.f=5, model="diagonal")
 
 #'h'      a matrix of the simulated conditional variances (T × N )
 #'eps'    a matrix of the simulated time series with (E)CCC-GARCH process (T × N )
@@ -165,6 +165,7 @@ d.R1=matrix(c(1,0.3,0.3,1),ncol=2)
 d.alpha1 = 0.1
 d.beta1  = 0.2
 d.H1<-dcc.sim(nobs=1000, d.a1, d.A1, d.B1, d.R1, dcc.para=c(d.alpha1,d.beta1), d.f=5, model="diagonal")
+
 
 # 'dcc'      a matrix of the simulated dynamic conditional correlations (T × N 2 )
 # 'h'        a matrix of the simulated conditional variances (T × N )

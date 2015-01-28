@@ -33,18 +33,24 @@ pre code.bash {
 library(rugarch)
 library(ccgarch)
 library(rmgarch)
+library(fGarch)
 library(gogarch)
 library(MTS)
 library(knitcitations)
+library(knitr)
+library(xtable)
+options(xtable.comment = FALSE)
 cite_options(cite.style = "numeric")
 options(xtable.comment = FALSE)
+
+load("~/Documents/sheetR/MGARCH-Examples/Simulations.Rdata.RData")
 ```
 
 
 
 Este texto trata da construção de exemplos de modelos GARCH multivariados. Para tanto, considere os modelos a seguir:  
 
-* VEC e BEKK  (Pacote `MTS`)
+* BEKK  (Pacote `MTS`)
 * CCC-GARCH e DCC-GARCH  
 * GO-GARCH (F-GARCH, O-GARCH)  
 * ICA-GARCH e GICA-GARCH   
@@ -54,7 +60,7 @@ As próximas sessões apresentarão exemplos de tais modelos utilizando as bibli
 
 <font color="red">  
 
-# VEC e BEKK  
+# BEKK  
 
 </font>  
 
@@ -85,7 +91,7 @@ h_{11,t}= 0.05 + 0.1 \epsilon^2_{1,t-1}+ 0.6 h_{11,t-1} \\
 h_{22,t}= 0.02 + 0.05 \epsilon^2_{2,t-1}+ 0.75 h_{22,t-1} 
 $$  
 
-```{r sim1}
+```
 ### EXEMPLOS USANDO O PACOTE 'ccgarch'
 # eccc.sim Arguments:
 
@@ -199,7 +205,7 @@ $$\textbf{Q}_t=(1-\alpha-\beta)\textbf{Q}+\alpha \textbf{u}_{t-1}\textbf{u}^T_{t
 ### Exemplo Simulado (DCCe-GARCH)   
 Para simular o processo DCC-GARCH, consideraremos os pacotes `ccgarch`. Compararemos o resultado da estimação através dos pacotes `ccgarch`, `rmgarch` e `MTS`, para que possamos comparar suas performances. A parametrização utilizada será aquela proposta por Engle ( veja equação @eqengle).
 
-```{r sim2}
+```
 ### EXEMPLOS USANDO O PACOTE 'ccgarch'
 # dcc.sim Arguments:
 
@@ -287,7 +293,7 @@ O resultado do modelo ajustado é o que se segue:
 d.fit2
 ```
 
-### Exemplo Simulado via `MTS`   
+### Estimação via `MTS`   
 
 O ajuste do modelo DCC-GARCH via pacote `MTS` é apresentado por Tsay(2014) e é realizado em duas etapas. Em primeiro lugar, ajusta-se um modelo GARCH é ajustado para as componentes da série multivariada e depois os paretros do modelo DCC-GARCH são estimados. Inicialmente, apenas o modelo DCC(1,1) está implementado. A sintaxe para o ajuste do processo simulado é:
 
@@ -315,42 +321,129 @@ Vimos tanto no exemplo do CCC-GARCH quanto no do DCC-GARCH que o pacote `ccgarch
 Da mesma forma, os pacotes `rmgarch` e `MTS` não apresentaram resultados próximos dos verdadeiros valores dos parâmetros. Dentre os três ajustes, o ajuste do pacote `MTS` foi o que apresentou menos discrepância, tendo maior viés na estimativa dos parâmetros do modelo DCC(1,1) do que nos modelos GARCH de sua primeira etapa.   
 
 
-# GO-GARCH  
-Nos modelos GO-GARCH, estamos interessados em construir decomposições ortogonais para a matriz $\Sigma_t$. Em outras palavras, buscamos a seguinte igualdade:   
+# GO-GARCH   
+
+Nos modelos GO-GARCH, estamos interessados em construir decomposições ortogonais para a matriz de covariâncias $\Sigma_t$. Em outras palavras, buscamos a seguinte igualdade:   
 
 $$
-\Sigma_t = M V_t M^T
+Cov(r_t | \mathbb{F}_{t-1}) = \Sigma_t = M V_t M^T
 $$
 
 em que $V_t$ é a matriz de covariâncias das componentes latentes do processo, $\textbf{b}_t=(b_{1t},b_{2t},\dots,b_{kt}),k \ge n$, i.e., $V_t=Cov(\textbf{b}_t | \mathbb{F}_{t-1})$. Se a transformação acima existir, então as variáveis latentes podem ser expressas  por:   
 
-$$
-\textbf{b}_t = M^{-1} a_t
+(@eq1gogarch) $$
+\textbf{b}_t = M^{-1} r_t
 $$
 
-Assumiremos que V_t é diagonal e que a variância não-condicional de $\textbf{b}_t$ é a matriz identidade $\textbf{I}_k$.
+Assumiremos que $V_t$ é diagonal e que a variância não-condicional de $\textbf{b}_t$ é a matriz identidade $\textbf{I}_k$. Ainda, assumiremos que a matriz **M** é invariante no tempo.    
+
+## Simulação  
+
+Considere um processo composto por variáveis latentes $b_{i,t},i=1,2,3$. Suporemos que estas variáveis são fatores independentes e seguem um GARCH(1,1) de parâmetros $\alpha=0.2$ e- $\beta=0.7$, cada uma delas. Utilizamos o pacote `fGarch` para simular cada uma destas variáveis:  
+
+```
+gog.spec = garchSpec(model = list(alpha = 0.2, beta = 0.7))
+gog.b1<-garchSim(gog.spec, n = 1000)
+gog.b2<-garchSim(gog.spec, n = 1000)
+gog.b3<-garchSim(gog.spec, n = 1000)
+gog.bt<-cbind(gog.b1,gog.b2,gog.b3)
+```
+
+```{r}
+plot.ts(as.ts(gog.bt), main="Processos simulados")
+```
+
+A Matriz M apresentada em (@eq1gogarch) é dada por:  
+
+$$ M=
+\left(
+\begin{array}{ccc}
+-0.4 & 0.1 & -0.3\\
+0.3 & 0.3 & -0.1\\
+0.4 & -0.1 & -0.5 
+\end{array}
+\right)
+$$
+
+```
+M=matrix(c(-0.4,0.1,-0.3,0.3,0.3,-0.1,0.4,-0.1,-0.5),ncol=3,byrow=T)
+```
+
+
+
+Assim, a partir da equação (@eq1gogarch) teremos:   
+
+```
+gog.rt<-t(M%*%t(bt))
+```
+
+## Estimação via `gogarch`    
+
+Estimaremos os parâmetros do processo simulado no início da seção a partir do pacote `gogarch` do **R**. Os valores ajustados para os processos GARCH dos fatores encontram-se próximos aos valores reais utilizados na simulação do processo. A matriz Z estimada, de acordo com Van Der Weide (2002), deveria representar os valores da matriz **M** em (@eq1gogarch) e a matriz U, a matriz rotacionada ortogonal.   
+
+```{r}
+system.time(fit1_gogarch<-gogarch(gog.rt*10^3,~garch(1,1),estby="ml"))
+
+# Slots:
+#   opt: Object of class "list": List returned by nlminb.
+#   estby: Object of class "character": Estimation method.
+#   models: Object of class "list": List of univariate GARCH model fits.
+#   garchf: Object of class "formula": Garch formula used for uncorrelated component GARCH models.
+#   name: Object of class "character": The name of the original data object.
+#   X: Object of class "matrix": The data matrix.
+#   V: Object of class "matrix": Covariance matrix of X.
+#   Z: Object of class "matrix": Transformation matrix.
+#   H: Object of class "list": List of conditional variance/covariance matrices.
+
+#   U: Object of class "matrix": Orthogonal matrix.
+#   Y: Object of class "matrix": Extra  cted component matrix.
+
+#   P: Object of class "matrix": Left singular values of Var/Cov matrix of X.
+#   Dsqr: Object of class "matrix": Square roots of eigenvalues on diagonal, else zero.
+
+fit1_gogarch
+```
+ 
+## Estimação via `rmgarch`    
+Também é possível ajustar modelos GO-GARCH a partir do pacote `rmgarch`. Para tanto, especifiquemos os parâmetros do processo inicialmente: 
+
+```{r}
+gogarchspec2<-gogarchspec(mean.model=list(model="constant"),distribution.model="mvnorm")
+```
+
+O ajuste do modelo via `rmgarch` se da a partir da função `gogarchfit`. Inicialmente o pacote sugere a mudança de escala na matriz de dados, já que os valores originais  próximos a zero (usual para log-retornos) apresentou muitos problemas de matrizes não invertíveis. Logo, ajustemos o modelo para a série de interesse re-escalada para $r_t \times 1000$.    
+
+```{r}
+gogarchfit2<-gogarchfit(gogarchspec2,gog.rt*10^3)
+gogarchfit2
+coef(gogarchfit2)
+```
+
+O pacote constrói ainda as superfícies estimadas de relação entre as diferentes séries da matriz de dados, a partir dos fatores estimados:   
+
+![Covariância Estimada entre as séries 1 e 2](r1-r2.jpeg)  
+![Covariância Estimada entre as séries 1 e 3](r1-r3.jpeg)  
+![Covariância Estimada entre as séries 2 e 3](r2-r3.jpeg)   
+
 <font color="red">   
 
-
-Pacote `gogarch` e pacote `rmgarch`  
-
 # ICA-GARCH e GICA-GARCH   
-Pacote `rmgarch`  
 
 </font>
 
 
 ## Referências   
 
-* Engle, R.F. and Granger, C.W.J. , *Co-integration and Error Correction: Representation, Estimation, and Testing*, Econometrica, Vol. 55, No.2, pp. 251-76, 1987.     
-* Hannan, E.J. and Quinn, B.G. , *The Determination of the Order of an Autoregression*, Journal of the Royal Statistical Society. Series B (Methodological) V41(2):190--195, Wiley, 1979.  
-* Johansen, S., *Statistical Analysis of cointegration vectors*, Journal of Economic Dynamics and Control, 12, 231-254, 1988. 
-* Laurent S., *Analytical Derivates of the APARCH Model*, Computational Economics, V24, Issue 1, pp 51-57, August 2004,  Kluwer Academic Publishers.  
+* Engle, R.F. and Granger, C.W.J. , *Co-integration and Error Correction: Representation, Estimation, and Testing*, Econometrica, 55(2), pp. 251-76, 1987.     
+* Hannan, E.J. and Quinn, B.G. , *The Determination of the Order of an Autoregression*, Journal of the Royal Statistical Society. Series B (Methodological) 41(2):190--195, Wiley, 1979.  
+* Johansen, S., *Statistical Analysis of cointegration vectors*, Journal of Economic Dynamics and Control, 12, 231-254, 1988.   
+* Laurent S., *Analytical Derivates of the APARCH Model*, Computational Economics, 24(1), pp 51-57, August 2004,  Kluwer Academic Publishers.  
 * Morettin P.A., *Econometria Financeira*, Blucher 2ed. Sao Paulo, 2013.  
 * Morettin P.A. e Toloi, C.M.C, *Análise de Séries Temporais*, Blucher, Sao Paulo, 2006.  
-* Phillips, P.C.B. and Ouliaris, S., *Asymptotic Properties of Residual Based Tests for Cointegration*, Econometrica, Vol. 58, No. 1, 165–193, 1990.   
-* Shumway R.H. and Stoffer D.S., *Time Series Analysis and Its Applications: With R Examples*, 3rd ed. Springer Texts in Statistics, 2011.
+* Phillips, P.C.B. and Ouliaris, S., *Asymptotic Properties of Residual Based Tests for Cointegration*, Econometrica, 58(1), 165--193, 1990.   
+* Shumway R.H. and Stoffer D.S., *Time Series Analysis and Its Applications: With R Examples*, 3rd ed. Springer Texts in Statistics, 2011.  
 * Taylor, J.W., *A Quantile Regression Neural Network Approach to Estimating the Conditional Density of Multiperiod Returns*, Journal of Forecasting, 19:299--311, Wiley and Sons, 2000.  
 * Tsay, R.S., *Analysis of Financial Time Series*, 2nd ed., Wiley, 2005.
-* Tsay, R.S., *Multivariate Analysis of Time Series with R and Financial Applications*, Wiley and Sons, 2014.
+* Tsay, R.S., *Multivariate Analysis of Time Series with R and Financial Applications*, Wiley and Sons, 2014.  
 * Zivot, E., Wang, J., *Modeling Financial Time Series with S-PLUS*, 2nd ed., Springer, 2006.  
+* Van Der Weide, R., *GO-GARCH: A Multivariate Generalized Orthogonal GARCH Model* Journal of Applied Econometrics, 17:549--564, 2002.  
