@@ -43,26 +43,57 @@ options(xtable.comment = FALSE)
 cite_options(cite.style = "numeric")
 options(xtable.comment = FALSE)
 
-load("~/Documents/sheetR/MGARCH-Examples/Simulations.Rdata.RData")
+load("~/Documents/sheetR/MGARCH-Examples/Simulations.RData")
 ```
-
-
 
 Este texto trata da construção de exemplos de modelos GARCH multivariados. Para tanto, considere os modelos a seguir:  
 
-* BEKK  (Pacote `MTS`)
+* BEKK   
 * CCC-GARCH e DCC-GARCH  
-* GO-GARCH (F-GARCH, O-GARCH)  
-* ICA-GARCH e GICA-GARCH   
+* GO-GARCH
+* GICA-GARCH   
 
 
-As próximas sessões apresentarão exemplos de tais modelos utilizando as bibliotecas `ccgarch,rmgarch e gogarch` do **R**.    
-
-<font color="red">  
+As próximas sessões apresentarão exemplos de tais modelos utilizando as bibliotecas `ccgarch, rmgarch, MTS e gogarch` do **R**.    
 
 # BEKK  
 
-</font>  
+Modelos BEKK(1,1)  são da forma:   
+
+$$
+\Sigma_t=\textbf{A}_0 \textbf{A}_0^T + \textbf{A}_1 \epsilon_{t-1}^T \epsilon_{t-1} \textbf{A}_1^T + \textbf{B}_1\Sigma_{t-1}^T
+$$
+
+em que $\textbf{A}_0$ é uma matriz triangular inferior de tal maneira que $\textbf{A}_0\textbf{A}_0^T$ é positiva deifinida.   
+A partir de tal formulação, considere os seguintes valores das matrizes:   
+
+$$
+\textbf{A}_0 = \left(
+              \begin{array}{ccc}
+              0.1 & 0 & 0 \\
+              -0.1 & 0.2 & 0 \\
+              0.3 & -0.1 & 0.4 
+              \end{array}
+              \right)\\
+\textbf{A}_1=\left(
+              \begin{array}{ccc}
+              0.7 & 0 & 0.1 \\
+              0 & 0.2 & -0.1 \\
+              0.2 & -0.1 & 0.4 
+              \end{array}
+              \right)\\
+\textbf{B}_1=\left(
+              \begin{array}{ccc}
+              0.2 & 0 & 0.5 \\
+              0 & 0 & 0.2 \\
+              0 & -0.1 & 0.1 
+              \end{array}
+              \right)\\
+\Sigma_0=\textbf{I}_3
+$$
+
+utilizaremos os pacotes `MTS` e `mgarch` para estimar os parâmetros deste processo.
+
 
 # CCC-GARCH e DCC-GARCH    
 ## CCC-GARCH    
@@ -170,15 +201,18 @@ c.fit1$out
    
 [//]: #   OBS: Se Considerarmos o chute inicial para w0=02 ou w0=\mu o processo nao converge para um valor próximo ao valor correto dos parâmetros.
 
-[//]: #   É possivel ainda estimar os resultados do processo CCC-GARCH simulado na seção anterior utilizando o pacote `rmgarch`, considerando que o modelo CCC-GARCH é um caso especial do DCC-GARCH, quando a matriz $R$ é fixa para todo *t*.
+[//]: #   É possivel ainda estimar os resultados do processo CCC-GARCH simulado na seção anterior utilizando o pacote `rmgarch`, considerando que o modelo CCC-GARCH é um caso especial do DCC-GARCH, quando a matriz $R$ é fixa para todo *t*.  
 
-```{r, include=FALSE}
+<!--
+```
 #NOT TO RUN#
 spec1 = ugarchspec(distribution = "norm")
 mspec = multispec(c(spec1,spec1))
 fitspec=dccspec(mspec,VAR=TRUE,lag=1,dccOrder=c(1,1),model="DCC",distribution="mvnorm")
 fit2=dccfit(fitspec,H1$eps)
 ```
+-->   
+
 
 ## DCC-GARCH   
 

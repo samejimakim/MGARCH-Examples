@@ -66,7 +66,7 @@ code > span.er { font-weight: bold; }
 <div id="header">
 <h1 class="title">Exemplos para processos GARCH multivariados</h1>
 <h4 class="author"><em>Kim Samejima Lopes</em></h4>
-<h4 class="date"><em>28 Jan, 2015</em></h4>
+<h4 class="date"><em>30 Jan, 2015</em></h4>
 </div>
 
 
@@ -78,16 +78,46 @@ pre code.bash {
   
 <p>Este texto trata da construção de exemplos de modelos GARCH multivariados. Para tanto, considere os modelos a seguir:</p>
 <ul>
-<li>BEKK (Pacote <code>MTS</code>)</li>
+<li>BEKK<br /></li>
 <li>CCC-GARCH e DCC-GARCH<br /></li>
-<li>GO-GARCH (F-GARCH, O-GARCH)<br /></li>
-<li>ICA-GARCH e GICA-GARCH</li>
+<li>GO-GARCH</li>
+<li>GICA-GARCH</li>
 </ul>
-<p>As próximas sessões apresentarão exemplos de tais modelos utilizando as bibliotecas <code>ccgarch,rmgarch e gogarch</code> do <strong>R</strong>.</p>
-<p><font color="red"></p>
+<p>As próximas sessões apresentarão exemplos de tais modelos utilizando as bibliotecas <code>ccgarch, rmgarch, MTS e gogarch</code> do <strong>R</strong>.</p>
 <div id="bekk" class="section level1">
 <h1><span class="header-section-number">1</span> BEKK</h1>
-<p></font></p>
+<p>Modelos BEKK(1,1) são da forma:</p>
+<p><span class="math">\[
+\Sigma_t=\textbf{A}_0 \textbf{A}_0^T + \textbf{A}_1 \epsilon_{t-1} \epsilon_{t-1}^T \textbf{A}_1^T + \textbf{B}_1\Sigma_{t-1}^T
+\]</span></p>
+<p>em que <span class="math">\(\textbf{A}_0\)</span> é uma matriz triangular inferior de tal maneira que <span class="math">\(\textbf{A}_0\textbf{A}_0^T\)</span> é positiva deifinida.<br />A partir de tal formulação, considere os seguintes valores das matrizes:</p>
+<p><span class="math">\[
+\textbf{A}_0 = \left(
+              \begin{array}{ccc}
+              0.1 &amp; 0 &amp; 0 \\
+              -0.1 &amp; 0.2 &amp; 0 \\
+              0.3 &amp; -0.1 &amp; 0.4 
+              \end{array}
+              \right)
+\]</span></p>
+<p><span class="math">\[
+\textbf{A}_1=\left(
+              \begin{array}{ccc}
+              0.7 &amp; 0 &amp; 0.1 \\
+              0 &amp; 0.2 &amp; -0.1 \\
+              0.2 &amp; -0.1 &amp; 0.4 
+              \end{array}
+              \right)\\
+\textbf{B}_1=\left(
+              \begin{array}{ccc}
+              0.2 &amp; 0 &amp; 0.5 \\
+              0 &amp; 0 &amp; 0.2 \\
+              0 &amp; -0.1 &amp; 0.1 
+              \end{array}
+              \right)\\
+\Sigma_0=\textbf{I}_3
+\]</span></p>
+<p>utilizaremos os pacotes <code>MTS</code> e <code>mgarch</code> para estimar os parâmetros deste processo.</p>
 </div>
 <div id="ccc-garch-e-dcc-garch" class="section level1">
 <h1><span class="header-section-number">2</span> CCC-GARCH e DCC-GARCH</h1>
@@ -203,6 +233,17 @@ c.fit1$opt$convergence</code></pre>
 ## Inv. Hessian   0.027924
 ## Outer Prod.    0.027862
 ## Robust         0.028438</code></pre>
+<!--
+```
+#NOT TO RUN#
+spec1 = ugarchspec(distribution = "norm")
+mspec = multispec(c(spec1,spec1))
+fitspec=dccspec(mspec,VAR=TRUE,lag=1,dccOrder=c(1,1),model="DCC",distribution="mvnorm")
+fit2=dccfit(fitspec,H1$eps)
+```
+-->   
+
+
 </div>
 </div>
 <div id="dcc-garch" class="section level2">
@@ -350,7 +391,7 @@ d.fit2=<span class="kw">dccfit</span>(fitspec,d.H1$eps)</code></pre>
 ## Hannan-Quinn 2.7493
 ## 
 ## 
-## Elapsed time : 3.1975</code></pre>
+## Elapsed time : 3.1918</code></pre>
 </div>
 <div id="estimacao-via-mts" class="section level3">
 <h3><span class="header-section-number">2.2.4</span> Estimação via <code>MTS</code></h3>
@@ -434,7 +475,7 @@ gog.bt&lt;-cbind(gog.b1,gog.b2,gog.b3)</code></pre>
 <p>Estimaremos os parâmetros do processo simulado no início da seção a partir do pacote <code>gogarch</code> do <strong>R</strong>. Os valores ajustados para os processos GARCH dos fatores encontram-se próximos aos valores reais utilizados na simulação do processo. A matriz Z estimada, de acordo com Van Der Weide (2002), deveria representar os valores da matriz <strong>M</strong> em (6) e a matriz U, a matriz rotacionada ortogonal.</p>
 <pre class="sourceCode r"><code class="sourceCode r"><span class="kw">system.time</span>(fit1_gogarch&lt;-<span class="kw">gogarch</span>(gog.rt*<span class="dv">10</span>^<span class="dv">3</span>,~<span class="kw">garch</span>(<span class="dv">1</span>,<span class="dv">1</span>),<span class="dt">estby=</span><span class="st">&quot;ml&quot;</span>))</code></pre>
 <pre><code>##    user  system elapsed 
-##  16.445   0.004  16.469</code></pre>
+##  17.649   0.012  17.683</code></pre>
 <pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Slots:</span>
 <span class="co">#   opt: Object of class &quot;list&quot;: List returned by nlminb.</span>
 <span class="co">#   estby: Object of class &quot;character&quot;: Estimation method.</span>

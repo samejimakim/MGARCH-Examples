@@ -5,17 +5,6 @@ library(gogarch)
 library(MTS)
 
 #**************************************************************#
-######################## PENDENCIAS ############################
-#**************************************************************#
-
-#### Conferir processo simulado no ccgarch - ou o processo simulado nao eh o especificado ou o ajuste do ccgarch eh ruim mesmo.
-#### Rodar o dccfit do pacote ccgarch para ajustar o ccgarch simulado e comparar os resultados
-### Simular e ajustar dcc-garch usando o rmgarch para comparar com os resultados do ccgarch
-
-### Replicar este processo para o dccgarch
-### SIMULAR PROCESSO COM CARGAS FATORIAIS!!!!!
-
-#**************************************************************#
 ########################## M-GARCH #############################
 #**************************************************************#
 ### EXEMPLOS DE CCC-GARCH E DCC-GARCH USANDO O PACOTE 'ccgarch'
@@ -192,7 +181,6 @@ fit2=dccfit(fitspec,H2$eps)
 
 ############ 2.4-ESTIMACAO USANDO O PACOTE 'MTS' ###############
 
-
 mtspre.fit3=dccPre(d.H1$eps, include.mean = T, p = 0, cond.dist = "std")
 d.fit3=dccFit(mtspre.fit3$sresi, type = "Engle", theta = c(d.alpha0, d.beta0),
               ub = c(0.92, 0.92), lb = c( 1e-04, 1e-04), cond.dist = "std", df = 5)
@@ -205,68 +193,24 @@ plot.ts(d.fit3$rho.t,cex.lab=0.5,cex.axis=0.8, main = "Dt")
 
 
 
+#**************************************************************#
+######################### 3-BEKK-GARCH ##########################
+#**************************************************************#
 
+bekk.spec = garchSpec(model = list(alpha = 0.2, beta = 0.7))
+bekk.A0=matrix(c(0.1,0,0,-0.1,0.2,0,0.3,-0.1,0.4),ncol=3,byrow=T)
+bekk.A1=matrix(c(0.7,0,0.1,0,0.2,-0.1,0.2,-0.1,0.4),ncol=3,byrow=T)
+bekk.B1=matrix(c(0.2,0,-0.5,0,0,0.2,0,-0.1,0.1),ncol=3,byrow=T)
+bekk.S0=diag(3)
+bekk.epsilon1=garchSim(bekk.spec, n = 1000)
+bekk.epsilon2=garchSim(bekk.spec, n = 1000)
+bekk.epsilon3=garchSim(bekk.spec, n = 1000)
+bekk.epsilon<-cbind(bekk.epsilon1,bekk.epsilon2,bekk.epsilon3)
 
+bekk.S<-array(0,dim=c(1000,3,3))
+bekk.S[1,,]=diag(3)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-##################### GO-GARCH ######################
-### EXEMPLOS USANDO O PACOTE 
-gogarchsim(fit, n.sim = 1, n.start = 0, m.sim = 1,
-           startMethod = c("unconditional", "sample"), prereturns = NA, preresiduals = NA,
-           presigma = NA, mexsimdata = NULL, rseed = NULL, cluster = NULL, ...)
-# Arguments
-# fit A GO-GARCH fit object of class goGARCHfit.
-# n.sim The simulation horizon.
-# n.start The burn-in sample.
-# m.sim The number of simulations.
-# startMethod Starting values for the simulation. Valid methods are “unconditional” for the
-# expected values given the density, and “sample” for the ending values of the
-# actual data from the fit object.
-# prereturns Allows the starting return data to be provided by the user.
-# preresiduals Allows the starting factor residuals to be provided by the user.
-# presigma Allows the starting conditional factor sigma to be provided by the user.
-# mexsimdata A list of matrices with the simulated lagged external variables (if any). The list
-# should be of size m.sim and the matrices each have n.sim + n.start rows.
-# rseed Optional seeding value(s) for the random number generator.
-# cluster A cluster object created by calling makeCluster from the parallel package. If
-# it is not NULL, then this will be used for parallel estimation (remember to stop
-#                                                                 the cluster on completion).
+for(t in 2:1000){  
+  bekk.S[t,,]=bekk.A0%*%t(bekk.A0) + bekk.A1 %*%  t(bekk.epsilon[t,]) %*% bekk.epsilon[t,] %*% t(bekk.A1) + bekk.B1%*%bekk.S[t-1,,]
+}
+MTSplot(bekk.S)
