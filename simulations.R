@@ -3,7 +3,8 @@ library(ccgarch)
 library(rmgarch)
 library(gogarch)
 library(MTS)
-
+library(mgarch)
+save.image("~/Documents/sheetR/MGARCH-Examples/Simulations.RData")
 #**************************************************************#
 ########################## M-GARCH #############################
 #**************************************************************#
@@ -21,6 +22,7 @@ h22.spec<-garchSpec(model = list(omega=0.2,alpha=0.5,beta=0.5),cond.dist = "norm
 h11<-garchSim(spec = h11.spec, n = 1000)
 h22<-garchSim(spec = h22.spec, n = 1000)
 R<-matrix(c(1,0.5,-0.5,1),ncol=2,byrow=T)
+
 
 #**************************************************************#
 ######################### 1-CCC-GARCH ##########################
@@ -214,3 +216,64 @@ for(t in 2:1000){
   bekk.S[t,,]=bekk.A0%*%t(bekk.A0) + bekk.A1 %*%  t(bekk.epsilon[t,]) %*% bekk.epsilon[t,] %*% t(bekk.A1) + bekk.B1%*%bekk.S[t-1,,]
 }
 MTSplot(bekk.S)
+
+###### 3.1-Simulacao utilizando o pacote mgarch ##### 
+bekk.sim <- mvBEKK.sim(series.count = 3, T = 2500)
+names(bekk.sim)
+# > names(bekk.sim)
+# [1] "length"            "series.count"      "order"            
+# [4] "params"            "true.params"       "eigenvalues"      
+# [7] "uncond.cov.matrix" "white.noise"       "eps"              
+# [10] "cor"               "sd" 
+bekk.sim$length
+bekk.sim$series.count
+bekk.sim$order
+bekk.sim$params
+bekk.sim$true.params
+bekk.sim$eigenvalues
+bekk.sim$uncond.cov.matrix
+matrix.bekk.sim<-cbind(bekk.sim$eps[[1]],bekk.sim$eps[[2]],bekk.sim$eps[[3]])
+plot.ts(matrix.bekk.sim)
+
+##### 3.1.a-Estimacao do BEKK via mgarch #####
+fit.bekk.mgarch<-mvBEKK.est(matrix.bekk.sim)
+##### 3.2-Estimacao do BEKK via MTS #####
+system.time(fit.bekk.mts<-BEKK11(matrix.bekk.sim))
+names(fit.bekk.mts)
+# [1] "estimates"  "HessianMtx" "Sigma.t"
+
+fit.bekk.mts$estimates
+
+# Coefficient(s):
+#   Estimate  Std. Error   t value   Pr(>|t|)    
+# mu1  -0.04128586  0.03738236  -1.10442 0.26941048    
+# mu2   0.03661509  0.04147022   0.88292 0.37727688    
+# mu3   0.05237963  0.06317117   0.82917 0.40700829    
+# A011  1.08667629          NA        NA         NA    
+# A021  0.17363956  0.04793755   3.62220 0.00029210 ***
+# A031  0.39239361  0.06920195   5.67027 1.4257e-08 ***
+# A022  1.21375768          NA        NA         NA    
+# A032 -0.03629572  0.07315632  -0.49614 0.61979618    
+# A033  1.84875451          NA        NA         NA    
+# A11   0.10000000  0.02602777   3.84205 0.00012201 ***
+# A21   0.02000000  0.02938531   0.68061 0.49611697    
+# A31   0.02000000  0.04494247   0.44501 0.65631007    
+# A12   0.02000000  0.02258799   0.88543 0.37592668    
+# A22   0.10000000  0.02645073   3.78061 0.00015644 ***
+# A32   0.02000000  0.03941846   0.50738 0.61189063    
+# A13   0.02000000  0.01464603   1.36556 0.17207776    
+# A23   0.02000000  0.01723125   1.16068 0.24577126    
+# A33   0.10000000  0.02909439   3.43709 0.00058800 ***
+# B11   0.80000000  0.00212753 376.02264 < 2.22e-16 ***
+# B21   0.02000000  0.01159774   1.72447 0.08462227 .  
+# B31   0.02000000  0.01685708   1.18645 0.23544657    
+# B12   0.02000000  0.00921145   2.17121 0.02991531 *  
+# B22   0.80000000  0.00175136 456.78913 < 2.22e-16 ***
+# B32   0.02000000  0.01700638   1.17603 0.23958312    
+# B13   0.02000000  0.00587621   3.40356 0.00066515 ***
+# B23   0.02000000  0.00699098   2.86083 0.00422532 ** 
+# B33   0.80000000  0.00285770 279.94580 < 2.22e-16 ***
+#   ---
+# Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+# user   system  elapsed 
+# 3394.252   37.831 3443.343 

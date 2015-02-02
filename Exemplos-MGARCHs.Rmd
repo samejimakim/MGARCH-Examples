@@ -58,42 +58,65 @@ As próximas sessões apresentarão exemplos de tais modelos utilizando as bibli
 
 # BEKK  
 
+
 Modelos BEKK(1,1)  são da forma:   
 
-$$
+(@eqbekk) $$
 \Sigma_t=\textbf{A}_0 \textbf{A}_0^T + \textbf{A}_1 \epsilon_{t-1}^T \epsilon_{t-1} \textbf{A}_1^T + \textbf{B}_1\Sigma_{t-1}^T
 $$
 
-em que $\textbf{A}_0$ é uma matriz triangular inferior de tal maneira que $\textbf{A}_0\textbf{A}_0^T$ é positiva deifinida.   
-A partir de tal formulação, considere os seguintes valores das matrizes:   
+em que $\textbf{A}_0$ é uma matriz triangular de tal maneira que $\textbf{A}_0\textbf{A}_0^T$ é positiva deifinida.   
+
+## Simulação do processo BEKK(1,1)
+
+A partir da formulação (@eqbekk), considere os seguintes valores das matrizes:   
 
 $$
 \textbf{A}_0 = \left(
               \begin{array}{ccc}
-              0.1 & 0 & 0 \\
-              -0.1 & 0.2 & 0 \\
-              0.3 & -0.1 & 0.4 
+              1 & 0.20 & 0.30 \\
+              0 & 1.04 & 0.01 \\
+              0 & 0 & 0.90 
               \end{array}
               \right)\\
 \textbf{A}_1=\left(
               \begin{array}{ccc}
-              0.7 & 0 & 0.1 \\
-              0 & 0.2 & -0.1 \\
-              0.2 & -0.1 & 0.4 
+                0.30 & 0.01 & 0.02 \\
+               -0.02 & 0.40 & 0.30 \\
+               -0.01 & -0.06 & 0.50
               \end{array}
               \right)\\
 \textbf{B}_1=\left(
               \begin{array}{ccc}
-              0.2 & 0 & 0.5 \\
-              0 & 0 & 0.2 \\
-              0 & -0.1 & 0.1 
+              0.20 & -0.03 & 0.70\\
+              0.01 & 0.30 & 0.01 \\
+              -0.10 & -0.06 & 0.50
               \end{array}
               \right)\\
 \Sigma_0=\textbf{I}_3
 $$
 
-utilizaremos os pacotes `MTS` e `mgarch` para estimar os parâmetros deste processo.
+O gráfico abaixo apresenta as séries simuladas com os parâmetros acima:   
 
+```{r}
+plot.ts(matrix.bekk.sim)
+```
+
+Utilizaremos o pacote `MTS` para estimar os parâmetros deste processo.   
+
+## Ajustes Utilizando o pacote `MTS`   
+
+Os ajustes para modelos BEKK são, em geral, muito custoso computacionalmente por conta da sua grande quantidade de parâmetros a serem estimados. Nesta seção utilizaremos o pacote `MTS` para estimar os parâmetros da série multivariada simulada na seção anterior.  
+Para o ajuste do modelo BEKK(1,1) utilizamos a seguinte sintaxe:   
+
+```
+fit.bekk.mts<-BEKK11(matrix.bekk.sim)
+```
+As estimativas são dadas por:
+
+```{r,echo=FALSE}
+fit.bekk.mts$estimates
+```
 
 # CCC-GARCH e DCC-GARCH    
 ## CCC-GARCH    
@@ -461,7 +484,7 @@ O pacote constrói ainda as superfícies estimadas de relação entre as diferen
 
 <font color="red">   
 
-# ICA-GARCH e GICA-GARCH   
+# GICA-GARCH   
 
 </font>
 
